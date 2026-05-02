@@ -52,6 +52,18 @@ npm install
 npm run dev
 ```
 
+**方式三： Claude Code 自动使用gh进行新项目创建**
+
+复制以下内容给Claude Code，它会自动创建一个新的仓库并使用模板初始化项目：
+
+```bash
+我想使用模板创建一个新的 Electron + Vue 3 + TypeScript 项目，项目名称为 my-app,你使用以下命令即可：
+gh repo create my-app --template chaofanat/electron-vue-template
+cd my-app
+npm install
+npm run dev
+```
+
 ### 网络问题处理
 
 如果 `npm install` 时遇到网络问题（Electron 下载失败）：
