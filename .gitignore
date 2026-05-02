@@ -1,0 +1,51 @@
+# 依赖
+node_modules/
+.pnp
+.pnp.js
+
+# 构建输出
+dist/
+.vite/
+out/
+*.tgz
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 日志
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 编辑器
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# Electron Forge
+.makersquirrel/
+.makerdeb/
+.makerzip/
+
+# TypeScript
+*.tsbuildinfo
+
+# 测试
+coverage/
+
+# 临时文件
+tmp/
+temp/
