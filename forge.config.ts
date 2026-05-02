@@ -8,15 +8,14 @@ import { VitePlugin } from '@electron-forge/plugin-vite';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    icon: './resources/icon',
     name: 'Electron Vue App',
     executableName: 'electron-vue-app',
   },
   makers: [
     new MakerSquirrel({
-      name: 'electron_vue_app',
+      setupIcon: './resources/icon.ico',
     }),
-    new MakerZIP({}, ['darwin']),
+    new MakerZIP({}, ['win32', 'darwin', 'linux']),
     new MakerDeb({
       options: {
         maintainer: 'Developer',

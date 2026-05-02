@@ -10,7 +10,7 @@ export default defineConfig({
   build: {
     outDir: '.vite/build/main',
     rollupOptions: {
-      external: ['electron', 'electron-log', 'electron-store', 'electron-updater'],
+      external: ['electron'],
     },
   },
 });

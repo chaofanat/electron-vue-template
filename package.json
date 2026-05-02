@@ -39,6 +39,6 @@
     "vite": "^5.1.6"
   },
   "keywords": ["electron", "vue", "typescript", "vite", "template"],
-  "author": "",
+  "author": "Electron Vue Template",
   "license": "MIT"
 }
