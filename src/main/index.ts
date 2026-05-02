@@ -7,6 +7,12 @@ import { setupLogger } from './logger';
 import { setupStore } from './store';
 import { setupCrashReporter } from './crash';
 import { setupUpdater } from './updater';
+import { handleSquirrelEvent } from './squirrel';
+
+// 处理 Squirrel 安装事件
+if (handleSquirrelEvent()) {
+  process.exit(0);
+}
 
 // 单实例锁
 const gotTheLock = app.requestSingleInstanceLock();
