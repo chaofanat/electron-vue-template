@@ -1,7 +1,8 @@
 import { BrowserWindow } from 'electron';
 import { MainWindow } from './MainWindow';
 import type { CreateWindowOptions, WindowInfo } from '../../shared/types';
-import type { Store } from 'electron-store';
+import type Store from 'electron-store';
+import type { StoreSchema } from '../store';
 import type { Logger } from 'electron-log';
 import { join } from 'path';
 import { WINDOW_DEFAULTS } from '../../shared/constants';
@@ -9,10 +10,10 @@ import { WINDOW_DEFAULTS } from '../../shared/constants';
 export class WindowManager {
   private mainWindow: MainWindow | null = null;
   private childWindows: Map<number, BrowserWindow> = new Map();
-  private store: Store;
+  private store: Store<StoreSchema>;
   private logger: Logger;
 
-  constructor(store: Store, logger: Logger) {
+  constructor(store: Store<StoreSchema>, logger: Logger) {
     this.store = store;
     this.logger = logger;
   }
@@ -37,7 +38,7 @@ export class WindowManager {
 
   createChildWindow(options: CreateWindowOptions): BrowserWindow {
     const parentWindow = options.parent
-      ? BrowserWindow.fromId(options.parent)
+      ? BrowserWindow.fromId(options.parent) ?? undefined
       : this.mainWindow?.getWindow();
 
     const window = new BrowserWindow({

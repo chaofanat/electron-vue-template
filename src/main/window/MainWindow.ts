@@ -1,15 +1,16 @@
 import { BrowserWindow, shell } from 'electron';
 import { join } from 'path';
 import { WINDOW_DEFAULTS } from '../../shared/constants';
-import type { Store } from 'electron-store';
+import type Store from 'electron-store';
+import type { StoreSchema } from '../store';
 import type { Logger } from 'electron-log';
 
 export class MainWindow {
   private window: BrowserWindow;
-  private store: Store;
+  private store: Store<StoreSchema>;
   private logger: Logger;
 
-  constructor(store: Store, logger: Logger) {
+  constructor(store: Store<StoreSchema>, logger: Logger) {
     this.store = store;
     this.logger = logger;
 
@@ -107,6 +108,14 @@ export class MainWindow {
 
   hide(): void {
     this.window.hide();
+  }
+
+  isMinimized(): boolean {
+    return this.window.isMinimized();
+  }
+
+  restore(): void {
+    this.window.restore();
   }
 
   destroy(): void {

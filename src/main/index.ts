@@ -14,6 +14,8 @@ if (handleSquirrelEvent()) {
   process.exit(0);
 }
 
+let isQuitting = false;
+
 // 单实例锁
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -44,7 +46,7 @@ if (!gotTheLock) {
     // 关闭到托盘设置
     mainWindow.getWindow().on('close', (event) => {
       const closeToTray = store.get('app.settings.closeToTray') as boolean;
-      if (closeToTray && !app.isQuitting) {
+      if (closeToTray && !isQuitting) {
         event.preventDefault();
         mainWindow.hide();
       }
@@ -70,7 +72,6 @@ if (!gotTheLock) {
   });
 
   app.on('second-instance', () => {
-    // 用户尝试运行第二个实例，聚焦到主窗口
     const mainWindow = windowManager?.getMainWindow();
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
@@ -85,7 +86,7 @@ if (!gotTheLock) {
   });
 
   app.on('before-quit', () => {
-    (app as any).isQuitting = true;
+    isQuitting = true;
     logger.info('应用退出');
   });
 }

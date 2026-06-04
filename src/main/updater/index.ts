@@ -2,12 +2,13 @@ import { autoUpdater } from 'electron-updater';
 import { BrowserWindow } from 'electron';
 import { IPC_CHANNELS } from '../../shared/constants';
 import { WindowManager } from '../window/WindowManager';
-import type { Store } from 'electron-store';
+import type Store from 'electron-store';
+import type { StoreSchema } from '../store';
 import type { Logger } from 'electron-log';
 
 let updaterWindow: BrowserWindow | null = null;
 
-export function setupUpdater(windowManager: WindowManager, store: Store, logger: Logger): void {
+export function setupUpdater(windowManager: WindowManager, store: Store<StoreSchema>, logger: Logger): void {
   // 读取自动更新设置
   const autoUpdateEnabled = store.get('app.settings.autoUpdate') as boolean;
 

@@ -19,9 +19,6 @@ export function setupLogger(): typeof log {
   // 配置日志文件大小限制 (10MB)
   log.transports.file.maxSize = 10 * 1024 * 1024;
 
-  // 配置日志文件保留数量
-  log.transports.file.maxArchiveFiles = 5;
-
   log.info('日志系统已初始化');
   log.info(`应用版本: ${app.getVersion()}`);
   log.info(`日志路径: ${log.transports.file.getFile().path}`);

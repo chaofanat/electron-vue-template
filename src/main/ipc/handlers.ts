@@ -2,11 +2,12 @@ import { ipcMain, app } from 'electron';
 import { channels } from './channels';
 import { WindowManager } from '../window/WindowManager';
 import { checkForUpdates, downloadUpdate, installUpdate } from '../updater';
-import type { Store } from 'electron-store';
+import type Store from 'electron-store';
+import type { StoreSchema } from '../store';
 import type { Logger } from 'electron-log';
 import type { CreateWindowOptions } from '../../shared/types';
 
-export function setupIPC(windowManager: WindowManager, store: Store, logger: Logger): void {
+export function setupIPC(windowManager: WindowManager, store: Store<StoreSchema>, logger: Logger): void {
   // 应用信息
   ipcMain.handle(channels.app.getVersion, () => {
     return app.getVersion();
@@ -51,15 +52,15 @@ export function setupIPC(windowManager: WindowManager, store: Store, logger: Log
 
   // 数据存储
   ipcMain.handle(channels.store.get, (_, key: string) => {
-    return store.get(key);
+    return store.get(key as keyof StoreSchema);
   });
 
   ipcMain.handle(channels.store.set, (_, key: string, value: unknown) => {
-    store.set(key, value);
+    store.set(key as keyof StoreSchema, value);
   });
 
   ipcMain.handle(channels.store.delete, (_, key: string) => {
-    store.delete(key);
+    store.delete(key as keyof StoreSchema);
   });
 
   // 日志

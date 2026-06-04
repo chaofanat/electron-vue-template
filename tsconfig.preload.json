@@ -5,9 +5,10 @@
     "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "outDir": ".vite/build/preload",
-    "rootDir": "src/preload",
     "resolveJsonModule": true,
+    "noEmit": true,
     "paths": {
       "@shared/*": ["./src/shared/*"]
     }
