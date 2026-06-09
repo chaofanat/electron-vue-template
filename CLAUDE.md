@@ -14,48 +14,35 @@
 
 ```
 ├── src/
-│   ├── main/                    # 主进程 (Node.js 环境)
+│   ├── main/                    # 主进程 (Node.js)
 │   │   ├── index.ts             # 应用入口
-│   │   ├── window/              # 窗口管理
-│   │   │   ├── MainWindow.ts    # 主窗口类
-│   │   │   └── WindowManager.ts # 多窗口管理器
-│   │   ├── ipc/                 # IPC 通信
-│   │   │   ├── channels.ts      # 频道常量定义
-│   │   │   └── handlers.ts      # 处理器注册
+│   │   ├── squirrel.ts          # Squirrel 安装事件处理
+│   │   ├── window/              # MainWindow.ts + WindowManager.ts
+│   │   ├── ipc/                 # channels.ts + handlers.ts
+│   │   ├── menu/                # 应用菜单
 │   │   ├── tray/                # 系统托盘
 │   │   ├── updater/             # 自动更新
-│   │   ├── store/               # 数据存储 (electron-store)
-│   │   ├── logger/              # 日志系统 (electron-log)
+│   │   ├── store/               # electron-store 持久化
+│   │   ├── logger/              # electron-log 日志
 │   │   └── crash/               # 崩溃报告
-│   ├── preload/                 # 预加载脚本 (桥接主进程和渲染进程)
+│   ├── preload/                 # 预加载脚本（Bridge 层）
 │   │   └── index.ts
-│   ├── renderer/                # 渲染进程 (浏览器环境)
+│   ├── renderer/                # 渲染进程 (Vue 3)
 │   │   ├── index.html
 │   │   └── src/
-│   │       ├── main.ts          # Vue 应用入口
-│   │       ├── App.vue          # 根组件
-│   │       ├── router/          # 路由配置
-│   │       ├── stores/          # Pinia 状态管理
-│   │       ├── views/           # 页面组件
-│   │       ├── components/      # 通用组件
-│   │       ├── hooks/           # 组合式函数
-│   │       ├── utils/           # 工具函数
-│   │       └── styles/          # 样式文件
-│   └── shared/                  # 共享代码（类型定义、常量）
-│       ├── types.ts
-│       └── constants.ts
-├── resources/                   # 静态资源（图标等）
-├── scripts/                     # 构建脚本
-├── CLAUDE.md                    # 本文件
-├── package.json
+│   │       ├── main.ts          # Vue 入口
+│   │       ├── App.vue
+│   │       ├── env.d.ts         # .vue 类型声明
+│   │       ├── router/          # 路由
+│   │       ├── views/           # 页面
+│   │       ├── composables/     # 组合式函数
+│   │       ├── components/      # 组件
+│   │       └── styles/          # 样式
+│   └── shared/                  # 共享类型和常量
+├── resources/                   # 静态资源
 ├── forge.config.ts              # Electron Forge 配置
-├── vite.main.config.ts          # 主进程 Vite 配置
-├── vite.preload.config.ts       # 预加载脚本 Vite 配置
-├── vite.renderer.config.ts      # 渲染进程 Vite 配置
-├── tsconfig.json                # TypeScript 基础配置
-├── tsconfig.main.json           # 主进程 TS 配置
-├── tsconfig.preload.json        # 预加载脚本 TS 配置
-└── tsconfig.renderer.json       # 渲染进程 TS 配置
+├── vite.*.config.ts             # Vite 配置 (main/preload/renderer)
+└── tsconfig.*.json              # TypeScript 配置
 ```
 
 ## 开发指南
@@ -169,15 +156,6 @@ note: {
 }
 ```
 
-### 与传统 Web 开发的对比
-
-| MSVB (Electron) | MTV (Django) | 说明 |
-|-----------------|--------------|------|
-| Model | Model | 数据结构定义 |
-| Service | View (业务逻辑) | 处理业务逻辑 |
-| View | Template | 用户界面展示 |
-| Bridge | URL 路由 | 请求路由和分发 |
-
 ### 设计原则
 
 1. **单向依赖**：View → Bridge → Service → Model，禁止反向依赖
@@ -279,59 +257,10 @@ await window.electronAPI.window.create({
 2. 预加载脚本是安全的桥梁，使用 `contextBridge` 暴露 API
 3. 所有 IPC 通信应有 TypeScript 类型定义
 4. 敏感操作应在主进程处理
+5. **electron-store 是默认导出**：`import Store from 'electron-store'`（非 `import { Store }`）；类型引用为 `import type Store from 'electron-store'`
 
 ## 故障排查
 
-### 依赖安装失败（网络问题）
-
-**问题现象：** `npm install` 时报 `ECONNRESET` 或 `ETIMEDOUT` 错误，通常是 Electron 二进制下载失败。
-
-**根本原因：** Electron 安装脚本会单独下载二进制文件（约 80MB），该下载不走 npm 代理设置，需要单独配置镜像源。
-
-**解决方案（Windows）：**
-
-```powershell
-# 1. 开启代理（解决 npm 包下载，前提是已经预定义了此代理开启命令且代理服务正常运行）
-proxy
-
-# 2. 设置 Electron 国内镜像（解决 Electron 二进制下载）
-$env:ELECTRON_MIRROR='https://npmmirror.com/mirrors/electron/'
-
-# 3. 安装依赖
-npm install
-```
-
-**其他镜像源（备选）：**
-
-- 淘宝镜像：`https://npmmirror.com/mirrors/electron/`
-- 官方镜像：`https://github.com/electron/electron/releases/download/`
-
-**永久配置（可选）：**
-
-在系统环境变量中添加：
-
-```
-ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
-```
-
-### 其他常见问题
-
-1. **应用无法启动**
-
-   - 检查 Node.js 版本（推荐 18+）
-   - 删除 `node_modules` 重新安装
-2. **IPC 调用失败**
-
-   - 检查频道名称是否一致
-   - 检查预加载脚本是否正确暴露 API
-3. **构建失败**
-
-   - 检查 TypeScript 类型错误
-   - 运行 `npm run lint` 检查代码规范
-
-## 相关文档
-
-- [Electron 文档](https://www.electronjs.org/docs)
-- [Vue 3 文档](https://vuejs.org/guide/introduction.html)
-- [Electron Forge 文档](https://www.electronforge.io/)
-- [Vite 文档](https://vitejs.dev/)
+- **依赖安装失败**：Electron 二进制下载不走 npm 代理，需设置 `$env:ELECTRON_MIRROR='https://npmmirror.com/mirrors/electron/'`（详见 README）
+- **IPC 调用失败**：检查频道名称一致性和预加载脚本 API 暴露
+- **构建失败**：运行 `npm run lint` 检查，TypeScript 配置已移除 `references`，各子配置独立运行

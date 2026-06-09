@@ -113,10 +113,12 @@ npm run format
 
 ```
 ├── src/
-│   ├── main/                    # 主进程 (Node.js 环境)
+│   ├── main/                    # 主进程 (Node.js)
 │   │   ├── index.ts             # 应用入口
+│   │   ├── squirrel.ts          # Squirrel 安装事件处理
 │   │   ├── window/              # 窗口管理
 │   │   ├── ipc/                 # IPC 通信
+│   │   ├── menu/                # 应用菜单
 │   │   ├── tray/                # 系统托盘
 │   │   ├── updater/             # 自动更新
 │   │   ├── store/               # 数据存储
@@ -126,16 +128,17 @@ npm run format
 │   │   └── index.ts
 │   ├── renderer/                # 渲染进程 (Vue 3)
 │   │   └── src/
+│   │       ├── main.ts          # Vue 入口
 │   │       ├── App.vue          # 根组件
+│   │       ├── env.d.ts         # .vue 类型声明
 │   │       ├── router/          # 路由配置
 │   │       ├── views/           # 页面组件
-│   │       ├── components/      # 通用组件
-│   │       └── styles/          # 样式文件
+│   │       ├── composables/     # 组合式函数
+│   │       └── components/      # 通用组件
 │   └── shared/                  # 共享代码
 │       ├── types.ts             # 类型定义
 │       └── constants.ts         # 常量定义
 ├── resources/                   # 静态资源
-├── CLAUDE.md                    # 开发文档
 └── package.json
 ```
 
