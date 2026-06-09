@@ -1,3 +1,14 @@
+// Runtime module resolution for packaged native modules.
+// When the app is packaged, native modules (.node) are copied to
+// resources/node_modules/ by the postPackage hook in forge.config.ts.
+// This NODE_PATH setting ensures require() can find them at runtime.
+if (require('electron').app.isPackaged) {
+  const path = require('path');
+  const resourcesNodeModules = path.join(process.resourcesPath, 'node_modules');
+  process.env.NODE_PATH = [resourcesNodeModules, process.env.NODE_PATH].filter(Boolean).join(';');
+  require('module')._initPaths();
+}
+
 import { app, BrowserWindow } from 'electron';
 import { WindowManager } from './window/WindowManager';
 import { setupIPC } from './ipc/handlers';

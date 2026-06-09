@@ -64,6 +64,44 @@ npm install
 npm run dev
 ```
 
+### 项目初始化
+
+使用模板创建项目后，需要修改以下配置以匹配你的项目：
+
+**1. `package.json`** — 项目基本信息
+
+```json
+{
+  "name": "your-app-name",
+  "version": "0.1.0",
+  "description": "你的项目描述",
+  "author": "Your Name",
+  "keywords": ["your", "keywords"]
+}
+```
+
+**2. `forge.config.ts`** — 打包产物名称
+
+```typescript
+packagerConfig: {
+  asar: true,
+  name: 'Your App Name',           // 应用显示名称
+  executableName: 'your-app-name', // 可执行文件名
+},
+```
+
+**3. `src/shared/constants.ts`** — 应用常量
+
+```typescript
+export const APP_NAME = 'Your App Name';
+```
+
+**4. 其他可选修改**
+
+- `forge.config.ts` 中 `MakerDeb` 的 `maintainer` 和 `homepage`
+- `src/main/store/index.ts` 中 `new Store` 的 `name`（存储文件名）
+- `resources/icon.ico` — 替换为你的应用图标
+
 ### 网络问题处理
 
 如果 `npm install` 时遇到网络问题（Electron 下载失败）：
@@ -109,6 +147,26 @@ npm run lint:fix
 npm run format
 ```
 
+### Worker 线程
+
+项目支持 Worker 线程用于 CPU 密集型任务。参见 `src/main/workers/example-worker.ts`。
+
+1. 在 `src/main/workers/` 下创建 worker 文件
+2. 在 `forge.config.ts` 的 VitePlugin build 数组中添加入口
+3. 使用对应的 `vite.worker.config.ts` 配置
+
+### 打包后验证
+
+`npm run build` 成功不代表打包正确，务必运行一次打包产物确认功能正常：
+
+```bash
+# Windows
+.\out\electron-vue-template-win32-x64\electron-vue-app.exe
+
+# macOS
+open out/electron-vue-template-darwin-x64/electron-vue-app.app
+```
+
 ## 项目结构
 
 ```
@@ -116,6 +174,7 @@ npm run format
 │   ├── main/                    # 主进程 (Node.js)
 │   │   ├── index.ts             # 应用入口
 │   │   ├── squirrel.ts          # Squirrel 安装事件处理
+│   │   ├── workers/             # Worker 线程
 │   │   ├── window/              # 窗口管理
 │   │   ├── ipc/                 # IPC 通信
 │   │   ├── menu/                # 应用菜单
@@ -161,6 +220,18 @@ Model  → Service → View  → Bridge
 4. **Bridge** - 在 preload 中暴露 API
 
 详细说明请参考 [CLAUDE.md](./CLAUDE.md)
+
+## 原生模块打包
+
+模板内置原生模块打包支持。安装含 `.node` 二进制的 npm 包（如 `better-sqlite3`、`sharp`）后：
+
+1. 在 `vite.main.config.ts` 的 `external` 列表中添加该模块
+2. `forge.config.ts` 的 `postPackage` hook 自动将原生模块复制到打包产物
+3. `src/main/index.ts` 自动设置 `NODE_PATH`，运行时可正常 `require`
+
+**只有含 .node 二进制的包需要 external，纯 JS 包让 Vite 打包即可。**
+
+详见 [CLAUDE.md](./CLAUDE.md) 的原生模块打包指南。
 
 ## 核心功能
 

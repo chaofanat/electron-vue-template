@@ -17,6 +17,7 @@
 │   ├── main/                    # 主进程 (Node.js)
 │   │   ├── index.ts             # 应用入口
 │   │   ├── squirrel.ts          # Squirrel 安装事件处理
+│   │   ├── workers/             # Worker 线程
 │   │   ├── window/              # MainWindow.ts + WindowManager.ts
 │   │   ├── ipc/                 # channels.ts + handlers.ts
 │   │   ├── menu/                # 应用菜单
@@ -101,60 +102,10 @@ Model  → Service → View  → Bridge
 
 添加新功能时，按以下顺序进行：
 
-```
-1. Model   → 定义数据类型和存储结构
-2. Service → 实现业务逻辑，注册 IPC 处理器
-3. View    → 创建页面和组件
-4. Bridge  → 在 preload 中暴露 API
-```
-
-### 示例：添加"笔记"功能
-
-**Step 1: Model（数据层）**
-```typescript
-// src/shared/types.ts
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
-
-**Step 2: Service（服务层）**
-```typescript
-// src/main/services/noteService.ts
-export class NoteService {
-  async getAll(): Promise<Note[]> { ... }
-  async create(note: Note): Promise<void> { ... }
-  async update(id: string, note: Partial<Note>): Promise<void> { ... }
-  async delete(id: string): Promise<void> { ... }
-}
-
-// src/main/ipc/handlers.ts
-ipcMain.handle('note:getAll', () => noteService.getAll());
-ipcMain.handle('note:create', (_, note) => noteService.create(note));
-```
-
-**Step 3: View（视图层）**
-```vue
-<!-- src/renderer/src/views/NoteList.vue -->
-<template>
-  <div class="note-list">
-    <NoteCard v-for="note in notes" :key="note.id" :note="note" />
-  </div>
-</template>
-```
-
-**Step 4: Bridge（桥接层）**
-```typescript
-// src/preload/index.ts
-note: {
-  getAll: () => ipcRenderer.invoke('note:getAll'),
-  create: (note) => ipcRenderer.invoke('note:create', note),
-}
-```
+1. **Model** → `src/shared/types.ts` 定义数据类型 + `src/main/store/` 定义存储
+2. **Service** → `src/main/ipc/handlers.ts` 注册 IPC 处理器
+3. **View** → `src/renderer/src/views/` 创建页面组件
+4. **Bridge** → `src/preload/index.ts` 暴露 API + `src/shared/constants.ts` 定义频道
 
 ### 设计原则
 
@@ -264,3 +215,57 @@ await window.electronAPI.window.create({
 - **依赖安装失败**：Electron 二进制下载不走 npm 代理，需设置 `$env:ELECTRON_MIRROR='https://npmmirror.com/mirrors/electron/'`（详见 README）
 - **IPC 调用失败**：检查频道名称一致性和预加载脚本 API 暴露
 - **构建失败**：运行 `npm run lint` 检查，TypeScript 配置已移除 `references`，各子配置独立运行
+
+---
+
+## 原生模块打包指南
+
+当你安装包含 `.node` 原生二进制文件的 npm 包时（如 `better-sqlite3`、`sqlite-vec`、`sharp` 等），需要额外配置：
+
+### 1. 在 `vite.main.config.ts` 中外部化该模块
+
+```typescript
+external: [
+  'electron',
+  ...nodeBuiltins,
+  'better-sqlite3',  // 添加你的原生模块
+],
+```
+
+**只有包含 .node 二进制文件的原生模块需要外部化。** 纯 JS 包（如 lodash、axios）应该让 Vite 打包，以获得 tree-shaking 优化。
+
+### 2. 打包机制
+
+模板已内置原生模块打包支持：
+
+- `forge.config.ts` 中的 `postPackage` hook 自动扫描 `node_modules` 中的 `.node` 文件
+- 将原生模块整个包目录复制到 `<buildOutput>/resources/node_modules/`
+- `src/main/index.ts` 在打包环境下自动设置 `NODE_PATH` 指向 `resources/node_modules`
+
+### 3. 打包后验证
+
+运行 `npm run build` 后，检查 `out/` 目录：
+
+- 原生模块应出现在 `resources/node_modules/` 下
+- 务必运行一次打包产物，确认原生模块加载正常
+
+### 4. 故障排查
+
+- 运行时报 `Cannot find module 'xxx'`：检查 `vite.main.config.ts` 的 `external` 列表是否包含该模块
+- Vite 构建报错：确认该模块已在 `external` 列表中
+- `.node` 文件未被复制：检查 `forge.config.ts` 的 `postPackage` hook 日志
+
+## Worker 线程
+
+项目支持 Worker 线程用于 CPU 密集型任务。参见 `src/main/workers/example-worker.ts`。
+
+### 使用步骤
+
+1. 在 `src/main/workers/` 下创建 worker 文件
+2. 在 `forge.config.ts` 的 VitePlugin build 数组中取消注释 worker entry（或添加新 entry）
+3. 如需自定义配置，创建对应的 `vite.worker.config.ts`
+
+### 注意事项
+
+- Worker 文件必须作为独立 entry 注册在 `forge.config.ts` 中，不能被主进程 bundle 引入
+- Worker 中的原生模块同样需要在 `vite.worker.config.ts` 的 `external` 中声明
